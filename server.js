@@ -180,7 +180,7 @@ bot.on("message", async (msg) => {
     // reply sukses seperti contoh kamu
     await safeSendMessage(
       chatId,
-      `✅ Data disimpan!\nNama: ${nama}\nNilai: ${poin}\n📊 Baris ke-${rowNumber}`,
+      `✅ Data disimpan!\nNama: ${nama}\nPoin: ${poin}\n📊 Baris ke-${rowNumber}`,
       { reply_to_message_id: msg.message_id }
     );
 
@@ -201,3 +201,4 @@ app.listen(PORT, () => {
   console.log("✅ Webhook endpoint: POST /webhook");
   console.log("✅ Sheet:", SHEET_NAME);
 });
+
