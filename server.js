@@ -52,20 +52,35 @@ app.get("/", (req, res) =>
   res.send("✅ Bot aktif (Group Only + Reply + Google Sheets)")
 );
 
+// ===== ANTI DUPLICATE FILTER =====
+const processedUpdates = new Set();
+
+// auto bersihin tiap 5 menit biar ga numpuk memory
+setInterval(() => {
+  processedUpdates.clear();
+}, 5 * 60 * 1000);
+
 /**
  * ✅ Webhook endpoint HARUS /webhook
  * Karena webhook Telegram kamu sekarang mengarah ke .../webhook
  */
 app.post("/webhook", async (req, res) => {
   try {
-    // log singkat biar gampang debug (boleh hapus kalau sudah stabil)
-    // console.log("📩 WEBHOOK HIT", new Date().toISOString());
+    const update = req.body;
 
-    await bot.processUpdate(req.body);
+    // 🔥 CEK DUPLICATE
+    if (processedUpdates.has(update.update_id)) {
+      return res.sendStatus(200); // skip kalau sudah diproses
+    }
+
+    processedUpdates.add(update.update_id);
+
+    await bot.processUpdate(update);
+
     res.sendStatus(200);
   } catch (e) {
     console.error("❌ Webhook error:", e?.message || e);
-    res.sendStatus(500);
+    res.sendStatus(200); // tetap 200 supaya Telegram ga retry
   }
 });
 
@@ -201,4 +216,5 @@ app.listen(PORT, () => {
   console.log("✅ Webhook endpoint: POST /webhook");
   console.log("✅ Sheet:", SHEET_NAME);
 });
+
 
