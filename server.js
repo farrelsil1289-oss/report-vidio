@@ -138,6 +138,16 @@ async function findNextEmptyRowInColumn(spreadsheetId, sheetName, colIndex) {
   return targetRowIndex + 2; // baris 2 = index 0
 }
 
+let sheetQueue = Promise.resolve();
+
+function runSheetQueue(task) {
+  sheetQueue = sheetQueue.then(task).catch((e) => {
+    console.error("❌ Queue error:", e?.message || e);
+  });
+
+  return sheetQueue;
+}
+
 /* =======================
    MESSAGE HANDLER
 ======================= */
@@ -154,7 +164,7 @@ bot.on("message", async (msg) => {
 
   const nama = match[1].trim().toUpperCase();
   const poin = match[2];
-
+await runSheetQueue(async () => {
   try {
     // ambil header baris 1
     const headerRes = await sheets.spreadsheets.values.get({
@@ -208,13 +218,29 @@ bot.on("message", async (msg) => {
   }
 });
 
+});
 /* =======================
    START
 ======================= */
+app.get("/keepalive", (req, res) => {
+  console.log("🔄 Keep alive ping");
+  res.send("OK");
+});
+
+function keepAliveLog() {
+  console.log("🟢 Bot sheet masih hidup:", new Date().toLocaleString("id-ID"));
+}
+
 app.listen(PORT, () => {
   console.log("🚀 Server running on port", PORT);
   console.log("✅ Webhook endpoint: POST /webhook");
   console.log("✅ Sheet:", SHEET_NAME);
+  // log tiap 3 jam
+  keepAliveLog();
+
+  setInterval(() => {
+    keepAliveLog();
+  }, 3 * 60 * 60 * 1000);
 });
 
 
